@@ -1,13 +1,15 @@
 """
 FaceFind — User Dashboard (Streamlit)
+Professional Photo Gallery Retrieval System
 
 Features:
-  - Register / Login
-  - Upload selfie → face search
-  - Scene-filtered search
-  - Results grid with download
-  - Save all matches to personal library
-  - Browse scene folders
+  - Event title display
+  - Name + Phone number input (simple form)
+  - Live camera capture (prominent)
+  - Privacy & consent checkboxes
+  - "Get My Photos" button
+  - Results gallery with download
+  - Social media links
 """
 
 import streamlit as st
@@ -16,367 +18,245 @@ import sys
 import time
 import tempfile
 from pathlib import Path
-import pandas as pd
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from database.db import (
-    create_user, verify_user,
-    get_scene_counts, get_photos_by_scene, get_photos_by_ids,
-    get_all_events, insert_face_match, get_user_matched_photos, log_search
+    get_all_events, get_photos_by_ids,
+    insert_face_match, log_search
 )
 from services.face_engine import face_engine
-from services.scene_engine import SCENE_EMOJIS, SCENE_CATEGORIES
+from services.scene_engine_light import SCENE_EMOJIS
 
 
-# ── Entry Point ───────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+#  Entry Point
+# ─────────────────────────────────────────────────────────────────────────────
 
 def render_user_dashboard():
-    if not st.session_state.get("user_logged_in"):
-        _render_auth()
-        return
-
-    # Logged-in header
-    st.sidebar.success(f"👤 {st.session_state.get('user_name', 'User')}")
-    if st.sidebar.button("🚪 Logout", key="user_logout"):
-        for key in ["user_logged_in", "user_name", "user_id", "user_email"]:
-            st.session_state.pop(key, None)
-        st.rerun()
-
-    tabs = st.tabs([
-        "🔍 Find My Photos",
-        "📚 My Library",
-        "🗂️ Browse by Scene"
-    ])
-    with tabs[0]:
-        _render_search_tab()
-    with tabs[1]:
-        _render_library_tab()
-    with tabs[2]:
-        _render_browse_tab()
-
-
-# ── Auth ──────────────────────────────────────────────────────────────────────
-
-def _render_auth():
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("""
-        <div style='text-align:center; padding: 2rem 0 1rem;'>
-            <h1 style='font-size:3rem;'>🤳</h1>
-            <h2 style='color:#6C63FF;'>Welcome to FaceFind</h2>
-            <p style='color:#888;'>Find yourself in event photos instantly</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        tab_login, tab_register = st.tabs(["🔑 Login", "✨ Register"])
-
-        with tab_login:
-            with st.form("user_login_form"):
-                email = st.text_input("📧 Email", placeholder="you@example.com")
-                password = st.text_input("🔒 Password", type="password", placeholder="••••••••")
-                submitted = st.form_submit_button("Login →", use_container_width=True)
-
-            if submitted:
-                user = verify_user(email, password)
-                if user and user["role"] == "user":
-                    _set_session(user)
-                    st.success("✅ Login successful!")
-                    time.sleep(0.5)
-                    st.rerun()
-                elif user and user["role"] == "admin":
-                    st.warning("⚠️ This is a user account login. Use the Admin Dashboard for admin access.")
-                else:
-                    st.error("❌ Invalid email or password.")
-
-        with tab_register:
-            with st.form("register_form"):
-                name = st.text_input("👤 Full Name", placeholder="Ada Lovelace")
-                email_r = st.text_input("📧 Email", placeholder="you@example.com", key="reg_email")
-                password_r = st.text_input("🔒 Password", type="password",
-                                           placeholder="Min 6 characters", key="reg_pass")
-                confirm = st.text_input("🔒 Confirm Password", type="password",
-                                        placeholder="Repeat password", key="reg_confirm")
-                submitted_r = st.form_submit_button("Create Account →", use_container_width=True)
-
-            if submitted_r:
-                if not name.strip():
-                    st.error("Please enter your name.")
-                elif len(password_r) < 6:
-                    st.error("Password must be at least 6 characters.")
-                elif password_r != confirm:
-                    st.error("Passwords do not match.")
-                else:
-                    user = create_user(email_r.strip(), name.strip(), password_r, role="user")
-                    if user:
-                        _set_session(user)
-                        st.success("🎉 Account created! Welcome to FaceFind.")
-                        time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        st.error("An account with this email already exists.")
-
-
-def _set_session(user: dict):
-    st.session_state["user_logged_in"] = True
-    st.session_state["user_name"] = user["name"]
-    st.session_state["user_id"] = user["id"]
-    st.session_state["user_email"] = user["email"]
-
-
-# ── Search Tab ────────────────────────────────────────────────────────────────
-
-def _render_search_tab():
-    st.markdown("## 🔍 Find My Photos")
-    st.markdown("Take a selfie with your camera — FaceFind will locate you across all event photos.")
-
-    col_left, col_right = st.columns([1, 1])
-
-    with col_left:
-        st.markdown("### 📸 Capture Your Face")
-
-        selfie_bytes = None
-
-        camera_img = st.camera_input(
-            "Click 📷 to take your selfie",
-            key="camera_selfie"
-        )
-        if camera_img:
-            selfie_bytes = camera_img.getbuffer()
-            st.success("✅ Photo captured!")
-
-    with col_right:
-        st.markdown("### 🎭 Scene Filter (Optional)")
-        st.caption("Narrow search to specific scene categories")
-
-        scene_counts = get_scene_counts()
-        available_scenes = [sc["scene"] for sc in scene_counts]
-
-        selected_scenes = st.multiselect(
-            "Select scenes (leave empty to search all)",
-            options=available_scenes,
-            format_func=lambda s: f"{SCENE_EMOJIS.get(s, '📁')} {s.replace('_', ' ').title()}",
-            key="scene_filter_ms"
-        )
-
-        st.markdown("### 📅 Event Filter (Optional)")
-        events = get_all_events()
-        event_options = ["All Events"] + [e["name"] for e in events]
-        selected_event_search = st.selectbox(
-            "Narrow to a specific event",
-            options=event_options,
-            key="event_filter_sel"
-        )
-
-        sensitivity = st.slider(
-            "🎯 Match Sensitivity",
-            min_value=0.2, max_value=0.95, value=0.40, step=0.05,
-            help="Lower = more results (fewer false negatives). Higher = stricter."
-        )
-
-    st.markdown("---")
-    search_btn = st.button(
-        "🚀 Find My Photos",
-        use_container_width=True,
-        type="primary",
-        disabled=(selfie_bytes is None)
-    )
-
-    if search_btn and selfie_bytes:
-        _run_face_search(
-            selfie_bytes=selfie_bytes,
-            selected_scenes=selected_scenes,
-            selected_event=None if selected_event_search == "All Events" else selected_event_search,
-            sensitivity=sensitivity
-        )
-
-
-def _run_face_search(selfie_bytes, selected_scenes, selected_event, sensitivity):
-    user_id = st.session_state["user_id"]
-
-    # Save selfie bytes to temp file
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-        tmp.write(bytes(selfie_bytes))
-        selfie_path = tmp.name
-
-    try:
-        with st.spinner("🔍 Scanning face embeddings…"):
-            # Get scene-filtered photo IDs if needed
-            allowed_ids = None
-            if selected_scenes or selected_event:
-                allowed_ids = set()
-                scenes_to_search = selected_scenes if selected_scenes else list(SCENE_CATEGORIES.keys())
-                for sc in scenes_to_search:
-                    photos = get_photos_by_scene(sc, event_name=selected_event)
-                    for p in photos:
-                        allowed_ids.add(p["id"])
-
-            # Temporarily override distance threshold per sensitivity
-            import services.face_engine as fe_mod
-            original_threshold = fe_mod.DISTANCE_THRESHOLD
-            fe_mod.DISTANCE_THRESHOLD = round(1.0 - sensitivity + 0.4, 3)
-
-            match_results = face_engine.search(
-                selfie_path=selfie_path,
-                top_k=100,
-                allowed_photo_ids=allowed_ids
+    """Main user dashboard - professional photo retrieval interface"""
+    
+    # ⚡ HEADER - Event showcase
+    st.markdown("""
+    <div style='text-align: center; padding: 2rem 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; margin-bottom: 2rem;'>
+        <h1 style='color: white; margin: 0; font-size: 2.5rem;'>📸 Your Event Photos</h1>
+        <p style='color: rgba(255,255,255,0.9); margin: 0.5rem 0 0;'>Find yourself in our collection instantly</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # ─ Main search form ─
+    st.markdown("## Get Your Photos")
+    
+    col_form = st.container()
+    with col_form:
+        col1, col2 = st.columns(2)
+        with col1:
+            full_name = st.text_input(
+                "Full Name *",
+                placeholder="Enter your full name",
+                key="user_fullname"
             )
-
-            fe_mod.DISTANCE_THRESHOLD = original_threshold
-
-        if not match_results:
-            st.warning("😕 No matching photos found. Try a different selfie or lower sensitivity.")
-            log_search(user_id, 0, ",".join(selected_scenes) if selected_scenes else None)
-            return
-
-        # Fetch full photo metadata
-        matched_ids = [m["photo_id"] for m in match_results]
-        photos = get_photos_by_ids(matched_ids)
-
-        # Save matches to DB
-        conf_map = {m["photo_id"]: m["confidence"] for m in match_results}
-        for photo in photos:
-            insert_face_match(user_id, photo["id"], conf_map.get(photo["id"], 0.0))
-
-        log_search(user_id, len(photos), ",".join(selected_scenes) if selected_scenes else None)
-
-        # Display results
-        st.markdown(f"---\n### ✅ Found **{len(photos)}** Photos of You!")
-        _render_photo_grid(photos, show_confidence=True, conf_map=conf_map)
-
-    finally:
-        try:
-            os.unlink(selfie_path)
-        except Exception:
-            pass
-
-
-# ── Library Tab ───────────────────────────────────────────────────────────────
-
-def _render_library_tab():
-    st.markdown("## 📚 My Matched Photos")
-    user_id = st.session_state["user_id"]
-    photos = get_user_matched_photos(user_id)
-
-    if not photos:
-        st.info("No matched photos yet. Go to **Find My Photos** tab and take a selfie!")
-        return
-
-    # Stats row
-    col1, col2, col3 = st.columns(3)
-    col1.metric("🖼️ Total Matches", len(photos))
-    events_in_matches = len(set(p["event_name"] for p in photos))
-    col2.metric("📅 Events", events_in_matches)
-    scenes_in_matches = len(set(p["scene_label"] for p in photos))
-    col3.metric("🎭 Scene Types", scenes_in_matches)
-
+        with col2:
+            phone_number = st.text_input(
+                "Mobile Number *",
+                placeholder="10-digit phone number",
+                key="user_phone"
+            )
+    
+    # ─ Camera Capture (PROMINENT) ─
+    st.markdown("### 📷 Capture Your Selfie")
+    
+    col_cam, col_upload = st.columns([2, 1])
+    with col_cam:
+        camera_img = st.camera_input(
+            "Click the camera icon to capture your selfie",
+            key="selfie_capture"
+        )
+    with col_upload:
+        st.markdown("<br>", unsafe_allow_html=True)
+        uploaded_selfie = st.file_uploader(
+            "Or upload a photo",
+            type=["jpg", "jpeg", "png", "webp"],
+            key="selfie_upload"
+        )
+    
+    selfie_image = None
+    if camera_img:
+        selfie_image = camera_img
+    elif uploaded_selfie:
+        selfie_image = uploaded_selfie
+    
+    # ─ Privacy & Consent ─
     st.markdown("---")
+    col_check1, col_check2 = st.columns([3, 1])
+    
+    with col_check1:
+        agree_privacy = st.checkbox(
+            "I agree to the Privacy Policy and give my Consent",
+            value=False,
+            key="privacy_check"
+        )
+    
+    with col_check2:
+        receive_promo = st.checkbox(
+            "Send me updates",
+            value=False,
+            key="promo_check"
+        )
+    
+    # ─ Main Action Button ─
+    col_btn = st.container()
+    with col_btn:
+        button_col1, button_col2 = st.columns([2, 1])
+        with button_col1:
+            search_clicked = st.button(
+                "🔍 GET MY PHOTOS",
+                use_container_width=True,
+                type="primary",
+                key="search_button"
+            )
+    
+    # ─ Execute Search ─
+    if search_clicked:
+        if not full_name.strip():
+            st.error("❌ Please enter your name")
+            return
+        if not phone_number.strip():
+            st.error("❌ Please enter your phone number")
+            return
+        if not agree_privacy:
+            st.error("❌ Please accept the privacy policy")
+            return
+        if selfie_image is None:
+            st.error("❌ Please capture or upload a selfie")
+            return
+        
+        # Process the search
+        _process_photo_search(full_name, phone_number, selfie_image)
+    
+    # ─ Footer with Social Links ─
+    st.markdown("---")
+    st.markdown("""
+    <div style='text-align: center; padding: 2rem 0;'>
+        <p style='color: #666; margin-bottom: 1rem;'>Follow Us</p>
+        <div style='display: flex; justify-content: center; gap: 1rem;'>
+            <a href='#' style='font-size: 2rem; text-decoration: none;'>📘</a>
+            <a href='#' style='font-size: 2rem; text-decoration: none;'>📷</a>
+            <a href='#' style='font-size: 2rem; text-decoration: none;'>🎥</a>
+            <a href='#' style='font-size: 2rem; text-decoration: none;'>💬</a>
+            <a href='#' style='font-size: 2rem; text-decoration: none;'>🌐</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Filter by event
-    event_names = list(set(p["event_name"] for p in photos if p["event_name"]))
-    if event_names:
-        filter_event = st.selectbox("📅 Filter by Event", ["All"] + event_names)
-        if filter_event != "All":
-            photos = [p for p in photos if p["event_name"] == filter_event]
 
-    _render_photo_grid(photos, show_confidence=True,
-                       conf_map={p["id"]: p.get("confidence", 0) for p in photos})
+def _process_photo_search(name: str, phone: str, selfie_image):
+    """Process the photo search"""
+    
+    st.markdown("---")
+    st.markdown("## 🔍 Searching for your photos...")
+    
+    # Show progress
+    progress_bar = st.progress(0)
+    status = st.empty()
+    
+    try:
+        # Extract face embeddings from user's selfie
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            tmp.write(selfie_image.getvalue())
+            tmp_path = tmp.name
+        
+        status.info("⏳ Analyzing your photo...")
+        progress_bar.progress(25)
+        
+        # Extract face vector
+        face_count = 0
+        try:
+            face_data = face_engine.extract_face_embeddings(tmp_path)
+            if face_data and len(face_data) > 0:
+                face_count = len(face_data)
+                user_embedding = face_data[0]  # Use first face
+            else:
+                st.error("❌ Could not detect a face in your photo. Please try again with a clear selfie.")
+                os.unlink(tmp_path)
+                return
+        except Exception as e:
+            st.error(f"❌ Face detection error: {str(e)}")
+            os.unlink(tmp_path)
+            return
+        
+        status.info("⏳ Searching photo database...")
+        progress_bar.progress(50)
+        
+        # Search FAISS index
+        try:
+            matched_ids = face_engine.search(user_embedding, top_k=100)
+            if not matched_ids:
+                progress_bar.progress(100)
+                status.empty()
+                st.warning("😔 No matches found. You might not be in these photos!")
+                os.unlink(tmp_path)
+                return
+        except Exception as e:
+            st.error(f"❌ Search error: {str(e)}")
+            os.unlink(tmp_path)
+            return
+        
+        status.info("⏳ Loading your photos...")
+        progress_bar.progress(75)
+        
+        # Fetch matched photos
+        matched_photos = get_photos_by_ids(matched_ids)
+        
+        progress_bar.progress(100)
+        status.empty()
+        
+        if not matched_photos:
+            st.warning("😔 No photos found for you.")
+            os.unlink(tmp_path)
+            return
+        
+        # ─ Display Results ─
+        st.success(f"🎉 Found **{len(matched_photos)}** photos of you!")
+        
+        st.markdown("### 📸 Your Photos")
+        
+        # Display in grid
+        COLS = 4
+        for row_start in range(0, len(matched_photos), COLS):
+            row_photos = matched_photos[row_start:row_start + COLS]
+            grid = st.columns(len(row_photos))
+            
+            for idx, photo in enumerate(row_photos):
+                with grid[idx]:
+                    try:
+                        img = Image.open(photo["local_path"])
+                        st.image(img, caption=photo["filename"][:20], use_column_width=True)
+                        
+                        # Download button
+                        with open(photo["local_path"], "rb") as f:
+                            st.download_button(
+                                label="⬇️ Download",
+                                data=f.read(),
+                                file_name=photo["filename"],
+                                mime="image/jpeg",
+                                key=f"download_{photo['id']}"
+                            )
+                    except Exception:
+                        st.info(f"📷 {photo['filename']}")
+        
+        # Log the search
+        try:
+            log_search("anonymous", len(matched_photos), "selfie_search")
+        except:
+            pass
+        
+        # Cleanup
+        os.unlink(tmp_path)
+        
+    except Exception as e:
+        st.error(f"❌ An error occurred: {str(e)}")
+        progress_bar.empty()
+        status.empty()
 
-
-# ── Browse Tab ────────────────────────────────────────────────────────────────
-
-def _render_browse_tab():
-    st.markdown("## 🗂️ Browse Photos by Scene")
-
-    events = get_all_events()
-    event_names = ["All Events"] + [e["name"] for e in events]
-    selected_event = st.selectbox("📅 Select Event", event_names, key="browse_event_user")
-    event_filter = None if selected_event == "All Events" else selected_event
-
-    scene_counts = get_scene_counts(event_name=event_filter)
-    if not scene_counts:
-        st.info("No photos found. Ask your admin to upload event photos.")
-        return
-
-    # Scene cards
-    SCENE_COLS = 5
-    cols = st.columns(SCENE_COLS)
-    for i, sc in enumerate(scene_counts):
-        emoji = SCENE_EMOJIS.get(sc["scene"], "📁")
-        label = sc["scene"].replace("_", " ").title()
-        with cols[i % SCENE_COLS]:
-            if st.button(
-                f"{emoji}\n{label}\n{sc['count']} photos",
-                key=f"user_scene_{sc['scene']}_{i}",
-                use_container_width=True
-            ):
-                st.session_state["user_browse_scene"] = sc["scene"]
-                st.session_state["user_browse_event"] = event_filter
-
-    selected_scene = st.session_state.get("user_browse_scene")
-    if selected_scene:
-        ev = st.session_state.get("user_browse_event", event_filter)
-        photos = get_photos_by_scene(selected_scene, event_name=ev)
-        emoji = SCENE_EMOJIS.get(selected_scene, "📁")
-        st.markdown(f"---\n### {emoji} {selected_scene.replace('_', ' ').title()}")
-        st.caption(f"{len(photos)} photos")
-        if photos:
-            _render_photo_grid(photos)
-        else:
-            st.info("No photos in this scene.")
-
-
-# ── Photo Grid ────────────────────────────────────────────────────────────────
-
-def _render_photo_grid(photos: list, show_confidence: bool = False,
-                       conf_map: dict = None, cols: int = 4):
-    """Render a responsive photo grid with optional confidence badge and download."""
-    if conf_map is None:
-        conf_map = {}
-
-    for row_start in range(0, len(photos), cols):
-        row = photos[row_start:row_start + cols]
-        grid_cols = st.columns(len(row))
-        for j, photo in enumerate(row):
-            with grid_cols[j]:
-                try:
-                    img = Image.open(photo["local_path"])
-
-                    # Confidence badge
-                    conf = conf_map.get(photo["id"], photo.get("confidence"))
-                    caption_parts = []
-                    if show_confidence and conf is not None:
-                        pct = int(conf * 100)
-                        badge = "🟢" if pct >= 70 else "🟡" if pct >= 40 else "🔴"
-                        caption_parts.append(f"{badge} {pct}% match")
-
-                    scene_emoji = SCENE_EMOJIS.get(photo.get("scene_label", ""), "📁")
-                    scene_label = photo.get("scene_label", "").replace("_", " ").title()
-                    if scene_label:
-                        caption_parts.append(f"{scene_emoji} {scene_label}")
-                    if photo.get("event_name"):
-                        caption_parts.append(f"📅 {photo['event_name']}")
-
-                    caption_text = " · ".join(caption_parts) if caption_parts else photo["filename"]
-
-                    st.image(img, caption=caption_text, use_container_width=True)
-
-                    # Download button (reads photo bytes)
-                    with open(photo["local_path"], "rb") as f:
-                        img_bytes = f.read()
-                    st.download_button(
-                        label="⬇️ Download",
-                        data=img_bytes,
-                        file_name=photo["filename"],
-                        mime="image/jpeg",
-                        key=f"dl_{photo['id']}_{row_start}_{j}",
-                        use_container_width=True
-                    )
-
-                    # Detected objects
-                    if photo.get("detected_objects"):
-                        st.caption("🏷️ " + " · ".join(photo["detected_objects"][:3]))
-
-                except Exception:
-                    st.info(f"📷 {photo.get('filename', 'Photo')}")
