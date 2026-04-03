@@ -412,21 +412,28 @@ def _run_ai_pipeline(image_paths: list, event_name: str, run_scene: bool, run_fa
     with col1:
         st.subheader("📊 Scene Distribution")
         if scene_tally:
-            df_scene = pd.DataFrame(
-                list(scene_tally.items()), columns=["Scene", "Count"]
-            ).sort_values("Count", ascending=False)
-            # Cast to native Python types to avoid numpy type issues
-            df_scene["Scene"] = df_scene["Scene"].astype(str)
-            df_scene["Count"] = df_scene["Count"].astype(int)
-            fig = px.bar(df_scene, x="Scene", y="Count",
-                         color="Count", color_continuous_scale="Viridis",
-                         template="plotly_dark")
-            fig.update_layout(
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=0, r=0, t=30, b=0)
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                # Convert to PURE Python lists - NO numpy/pandas types
+                scenes = []
+                counts = []
+                for scene_key in sorted(scene_tally.keys(), key=lambda x: scene_tally[x], reverse=True):
+                    scenes.append(scene_key.replace("_", " ").title())
+                    counts.append(int(scene_tally[scene_key]))
+                
+                # Use plotly with direct Python values
+                fig = px.bar(x=scenes, y=counts,
+                             labels={"x": "Scene", "y": "Count"},
+                             color=counts, color_continuous_scale="Viridis",
+                             template="plotly_dark")
+                fig.update_layout(
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    margin=dict(l=0, r=0, t=30, b=0)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception as e:
+                # Fallback: simple bar chart
+                st.bar_chart({"Scene": scenes, "Count": counts})
 
     with col2:
         st.subheader("📋 Processing Log")
@@ -468,31 +475,27 @@ def _render_analytics_tab():
         st.subheader("📁 Scene Distribution (All Events)")
         scene_counts = get_scene_counts()
         if scene_counts:
-            # Build chart data with 100% native Python types
-            chart_data = []
-            for item in scene_counts:
-                scene_str = str(item["scene"])
-                emoji = SCENE_EMOJIS.get(scene_str, "📁")
-                label = emoji + " " + scene_str.replace("_", " ").title()
-                count = int(item["count"])
-                chart_data.append({"label": label, "count": count})
-            
-            df = pd.DataFrame(chart_data)
-            # Ensure all columns are native Python types
-            df["label"] = df["label"].astype(str)
-            df["count"] = pd.to_numeric(df["count"], downcast="integer")
-            
-            # Create pie chart with pure native types
             try:
-                fig = px.pie(df, values="count", names="label",
+                # Build PURE Python dict list - NO pandas/numpy types
+                labels = []
+                counts = []
+                for item in scene_counts:
+                    scene_str = str(item["scene"])
+                    emoji = SCENE_EMOJIS.get(scene_str, "📁")
+                    label = emoji + " " + scene_str.replace("_", " ").title()
+                    labels.append(label)
+                    counts.append(int(item["count"]))
+                
+                # Use plotly directly with Python values
+                fig = px.pie(names=labels, values=counts,
                              template="plotly_dark",
                              color_discrete_sequence=px.colors.sequential.Plasma_r)
                 fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
                                    margin=dict(l=0, r=0, t=30, b=0))
                 st.plotly_chart(fig, use_container_width=True)
             except Exception as e:
-                # Fallback: use simple bar chart (no plotly)
-                st.bar_chart(df.set_index("label")["count"])
+                # Fallback: simple bar chart (bulletproof)
+                st.bar_chart({"Scene": labels, "Count": counts})
         else:
             st.info("No photo data yet. Upload an event to see analytics.")
 
@@ -500,34 +503,34 @@ def _render_analytics_tab():
         st.subheader("📅 Events Overview")
         events = get_all_events()
         if events:
-            # Build dataset with native Python types only
-            events_data = []
-            for e in events:
-                events_data.append({
-                    "event_name": str(e["name"]),
-                    "photos": int(e["photo_count"]),
-                    "created": str(e["created_at"])[:10] if e.get("created_at") else "—"
-                })
-            
-            df_ev = pd.DataFrame(events_data)
-            display_cols = ["event_name", "photos", "created"]
-            df_ev.columns = ["Event Name", "Photos", "Created At"]
-            st.dataframe(df_ev[display_cols], use_container_width=True)
+            try:
+                # Build PURE Python lists - NO pandas/numpy types
+                event_names = []
+                photo_counts = []
+                
+                for e in events:
+                    event_names.append(str(e["name"]))
+                    photo_counts.append(int(e["photo_count"]))
+                
+                # Display as table using streamlit (no plotly needed)
+                st.dataframe({
+                    "Event Name": event_names,
+                    "Photos": photo_counts,
+                }, use_container_width=True)
 
-            # Bar chart with guaranteed native types
-            df_chart = pd.DataFrame({
-                "event_name": [str(e["event_name"]) for e in events_data],
-                "photos": [int(e["photos"]) for e in events_data]
-            })
-            
-            fig2 = px.bar(df_chart, x="event_name", y="photos",
-                          color="photos",
-                          color_continuous_scale="Blues",
-                          template="plotly_dark")
-            fig2.update_layout(plot_bgcolor="rgba(0,0,0,0)",
-                                paper_bgcolor="rgba(0,0,0,0)",
-                                margin=dict(l=0, r=0, t=30, b=0))
-            st.plotly_chart(fig2, use_container_width=True)
+                # Bar chart with pure Python values
+                fig2 = px.bar(x=event_names, y=photo_counts,
+                              labels={"x": "Event", "y": "Photos"},
+                              color=photo_counts,
+                              color_continuous_scale="Blues",
+                              template="plotly_dark")
+                fig2.update_layout(plot_bgcolor="rgba(0,0,0,0)",
+                                    paper_bgcolor="rgba(0,0,0,0)",
+                                    margin=dict(l=0, r=0, t=30, b=0))
+                st.plotly_chart(fig2, use_container_width=True)
+            except Exception as e:
+                # Fallback: simple bar chart
+                st.bar_chart({"Event": event_names, "Photos": photo_counts})
         else:
             st.info("No events uploaded yet.")
 
