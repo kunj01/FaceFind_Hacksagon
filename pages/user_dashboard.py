@@ -152,7 +152,7 @@ def render_user_dashboard():
 
 
 def _process_photo_search(name: str, phone: str, selfie_image):
-    """Process the photo search"""
+    """Process the photo search - extract face and find matches"""
     
     st.markdown("---")
     st.markdown("## 🔍 Searching for your photos...")
@@ -162,7 +162,7 @@ def _process_photo_search(name: str, phone: str, selfie_image):
     status = st.empty()
     
     try:
-        # Extract face embeddings from user's selfie
+        # Save selfie to temporary file
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
             tmp.write(selfie_image.getvalue())
             tmp_path = tmp.name
@@ -170,29 +170,18 @@ def _process_photo_search(name: str, phone: str, selfie_image):
         status.info("⏳ Analyzing your photo...")
         progress_bar.progress(25)
         
-        # Extract face vector
-        face_count = 0
-        try:
-            face_data = face_engine.extract_face_embeddings(tmp_path)
-            if face_data and len(face_data) > 0:
-                face_count = len(face_data)
-                user_embedding = face_data[0]  # Use first face
-            else:
-                st.error("❌ Could not detect a face in your photo. Please try again with a clear selfie.")
-                os.unlink(tmp_path)
-                return
-        except Exception as e:
-            st.error(f"❌ Face detection error: {str(e)}")
-            os.unlink(tmp_path)
-            return
-        
         status.info("⏳ Searching photo database...")
         progress_bar.progress(50)
         
-        # Search FAISS index
+        # Search using face engine (directly passes selfie_path)
         try:
-            matched_ids = face_engine.search(user_embedding, top_k=100)
-            if not matched_ids:
+            match_results = face_engine.search(
+                selfie_path=tmp_path,
+                top_k=100,
+                allowed_photo_ids=None
+            )
+            
+            if not match_results:
                 progress_bar.progress(100)
                 status.empty()
                 st.warning("😔 No matches found. You might not be in these photos!")
@@ -206,7 +195,8 @@ def _process_photo_search(name: str, phone: str, selfie_image):
         status.info("⏳ Loading your photos...")
         progress_bar.progress(75)
         
-        # Fetch matched photos
+        # Extract photo IDs from results
+        matched_ids = [m.get("photo_id", i) for i, m in enumerate(match_results)]
         matched_photos = get_photos_by_ids(matched_ids)
         
         progress_bar.progress(100)
@@ -241,7 +231,7 @@ def _process_photo_search(name: str, phone: str, selfie_image):
                                 data=f.read(),
                                 file_name=photo["filename"],
                                 mime="image/jpeg",
-                                key=f"download_{photo['id']}"
+                                key=f"download_{photo['id']}_{idx}"
                             )
                     except Exception:
                         st.info(f"📷 {photo['filename']}")
