@@ -16,7 +16,7 @@
 
 <br/>
 
-> Built for **Nirma Hackathon 2025** · Team **Code Titans**  
+> Built for **Hacksagon Hackathon 2026** · Team **Code Titans**  
 > Track: Software — Data Science & Machine Learning
 
 <br/>
