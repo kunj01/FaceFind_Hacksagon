@@ -45,11 +45,16 @@ def render_admin_dashboard():
         return
 
     # ── Logged in ─────────────────────────────────────────────────────────
-    st.sidebar.success(f"👤 {st.session_state.get('admin_name', 'Admin')}")
-    if st.sidebar.button("🚪 Logout", key="admin_logout"):
-        for key in ["admin_logged_in", "admin_name", "admin_id"]:
-            st.session_state.pop(key, None)
-        st.rerun()
+    col1, col2 = st.sidebar.columns([3, 1])
+    with col1:
+        st.sidebar.markdown(f"**👤 {st.session_state.get('admin_name', 'Admin')}**")
+    with col2:
+        if st.sidebar.button("🚪", key="admin_logout", help="Logout", use_container_width=True):
+            for key in ["admin_logged_in", "admin_name", "admin_id"]:
+                st.session_state.pop(key, None)
+            st.rerun()
+
+    st.sidebar.markdown("---")
 
     # Top-level admin tabs
     tabs = st.tabs([
@@ -75,120 +80,204 @@ def _render_login():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("""
-        <div style='text-align:center; padding: 2rem 0 1rem;'>
-            <h1 style='font-size:3rem;'>🔐</h1>
-            <h2 style='color:#6C63FF;'>Admin Login</h2>
-            <p style='color:#888;'>FaceFind Control Panel</p>
+        <div style='text-align:center; padding: 2rem 0 1.5rem; animation: fadeInUp 0.6s ease-out;'>
+            <h1 style='font-size:4rem; margin-bottom: 0.5rem;'>🔐</h1>
+            <h1 style='background: linear-gradient(135deg, #0EA5E9, #8B5CF6); 
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+                font-weight: 800; font-size: 2.5rem; margin: 0;'>
+                Admin Portal
+            </h1>
+            <p style='color:#4B5563; font-size: 1.05rem; margin: 0.5rem 0 0; font-weight: 500;'>
+                FaceFind Control Center
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
-        with st.form("admin_login_form"):
-            email = st.text_input("📧 Admin Email", placeholder="admin@facefind.ai")
-            password = st.text_input("🔑 Password", type="password", placeholder="••••••••")
-            submitted = st.form_submit_button("Login →", use_container_width=True)
+        with st.container(border=True):
+            with st.form("admin_login_form", border=False):
+                st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                email = st.text_input(
+                    "Admin Email",
+                    placeholder="admin@facefind.ai",
+                    key="admin_email"
+                )
+                password = st.text_input(
+                    "Password",
+                    type="password",
+                    placeholder="••••••••",
+                    key="admin_password"
+                )
+                st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                col_space, col_btn = st.columns([0.15, 0.85])
+                with col_btn:
+                    submitted = st.form_submit_button(
+                        "Access Dashboard",
+                        use_container_width=True,
+                        type="primary"
+                    )
 
-        if submitted:
-            user = verify_user(email, password)
-            if user and user["role"] == "admin":
-                st.session_state["admin_logged_in"] = True
-                st.session_state["admin_name"] = user["name"]
-                st.session_state["admin_id"] = user["id"]
-                st.success("✅ Login successful!")
-                time.sleep(0.5)
-                st.rerun()
-            else:
-                st.error("❌ Invalid credentials or insufficient permissions.")
+                if submitted:
+                    if not email.strip():
+                        st.error("Please enter your admin email.")
+                    elif not password.strip():
+                        st.error("Please enter your password.")
+                    else:
+                        user = verify_user(email, password)
+                        if user and user["role"] == "admin":
+                            st.session_state["admin_logged_in"] = True
+                            st.session_state["admin_name"] = user["name"]
+                            st.session_state["admin_id"] = user["id"]
+                            st.success("✅ Login successful!")
+                            time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            st.error("❌ Invalid credentials or insufficient permissions.")
 
-        st.markdown("""
-        <p style='text-align:center; color:#666; font-size:0.85rem; margin-top:1rem;'>
-        Default: admin@facefind.ai / admin123
-        </p>
-        """, unsafe_allow_html=True)
+            st.markdown("""
+            <div style='
+                text-align: center;
+                color: #4B5563;
+                font-size: 0.85rem;
+                margin-top: 1.5rem;
+                padding-top: 1rem;
+                border-top: 1px solid #E5E7EB;
+            '>
+                <span style='opacity: 0.7;'>Default: admin@facefind.ai / admin123</span>
+            </div>
+            """, unsafe_allow_html=True)
+
 
 
 # ── Upload Tab ────────────────────────────────────────────────────────────────
 
 def _render_upload_tab():
-    st.markdown("## 📤 Upload Event Photos")
+    st.markdown("""
+    <div style='text-align:center; padding-bottom: 1.5rem; animation: slideInDown 0.5s ease-out;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #111827; margin: 0;'>📤 Upload Event Photos</h2>
+        <p style='color: #4B5563; font-size: 0.95rem; margin-top: 0.5rem; font-weight: 500;'>
+            Start the AI pipeline by connecting a data source
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    src_tab_drive, src_tab_local = st.tabs([
-        "☁️ Google Drive Folder",
-        "💻 Upload from Computer"
-    ])
+    with st.container(border=True):
+        src_tab_drive, src_tab_local = st.tabs([
+            "☁️ Google Drive",
+            "💻 Upload from Computer"
+        ])
 
-    # ── Source 1: Google Drive ────────────────────────────────────────────
-    with src_tab_drive:
-        st.markdown(
-            "Paste a **Google Drive folder link** shared as *Anyone with the link can view*."
-        )
-        with st.form("upload_form_drive"):
+        with src_tab_drive:
+            st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "Paste a **Google Drive folder link** shared as *Anyone with the link can view*."
+            )
+            with st.form("upload_form_drive", border=False):
+                st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                drive_url = st.text_input(
+                    "Google Drive Folder URL",
+                    placeholder="https://drive.google.com/drive/folders/XXXXXX",
+                    key="drive_url_input"
+                )
+                event_name_d = st.text_input(
+                    "Event Name",
+                    placeholder="Annual Fest 2025",
+                    key="drive_event_name"
+                )
+                
+                st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                col_scene_d, col_face_d = st.columns(2)
+                with col_scene_d:
+                    run_scene_d = st.checkbox(
+                        "🎭 Scene Understanding",
+                        value=True,
+                        key="drive_scene_check"
+                    )
+                with col_face_d:
+                    run_face_d = st.checkbox(
+                        "👤 Face Embeddings",
+                        value=True,
+                        key="drive_face_check"
+                    )
+                
+                st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                col_empty, col_drive_btn = st.columns([0.15, 0.85])
+                with col_drive_btn:
+                    process_btn_d = st.form_submit_button(
+                        "🚀 Start AI Pipeline",
+                        use_container_width=True,
+                        type="primary"
+                    )
+
+            if process_btn_d:
+                if not drive_url.strip():
+                    st.error("Please provide a Google Drive URL.")
+                elif not event_name_d.strip():
+                    st.error("Please provide an event name.")
+                else:
+                    _run_processing_pipeline(
+                        drive_url.strip(), event_name_d.strip(),
+                        run_scene=run_scene_d, run_face=run_face_d
+                    )
+
+        # ── Source 2: Direct upload ───────────────────────────────────────────
+        with src_tab_local:
+            st.markdown(
+                "Upload photos **directly from your computer** — the most reliable option for demos."
+            )
+            st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+            
             col1, col2 = st.columns([2, 1])
             with col1:
-                drive_url = st.text_input(
-                    "🔗 Google Drive Folder URL",
-                    placeholder="https://drive.google.com/drive/folders/XXXXXX"
+                uploaded_files = st.file_uploader(
+                    "Select Photos (JPG / PNG / WEBP)",
+                    type=["jpg", "jpeg", "png", "webp", "bmp"],
+                    accept_multiple_files=True,
+                    key="local_upload_files"
                 )
             with col2:
-                event_name_d = st.text_input(
-                    "📅 Event Name",
-                    placeholder="Annual Fest 2025"
-                )
-            col_a, col_b = st.columns(2)
-            with col_a:
-                run_scene_d = st.checkbox("🎭 Scene Understanding (CLIP + YOLO)", value=True)
-            with col_b:
-                run_face_d = st.checkbox("👤 Face Embeddings (ArcFace)", value=True)
-            process_btn_d = st.form_submit_button("🚀 Process Photos", use_container_width=True)
-
-        if process_btn_d:
-            if not drive_url.strip():
-                st.error("Please provide a Google Drive URL.")
-            elif not event_name_d.strip():
-                st.error("Please provide an event name.")
-            else:
-                _run_processing_pipeline(
-                    drive_url.strip(), event_name_d.strip(),
-                    run_scene=run_scene_d, run_face=run_face_d
+                event_name_l = st.text_input(
+                    "Event Name",
+                    placeholder="Annual Fest 2025",
+                    key="local_event_name"
                 )
 
-    # ── Source 2: Direct upload ───────────────────────────────────────────
-    with src_tab_local:
-        st.markdown(
-            "Upload photos **directly from your computer** — the most reliable option for demos."
-        )
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            uploaded_files = st.file_uploader(
-                "📁 Select Photos (JPG / PNG / WEBP)",
-                type=["jpg", "jpeg", "png", "webp", "bmp"],
-                accept_multiple_files=True,
-                key="local_upload_files"
-            )
-        with col2:
-            event_name_l = st.text_input(
-                "📅 Event Name",
-                placeholder="Annual Fest 2025",
-                key="local_event_name"
-            )
+            st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+            col_a2, col_b2 = st.columns(2)
+            with col_a2:
+                run_scene_l = st.checkbox(
+                    "🎭 Scene Understanding",
+                    value=True,
+                    key="local_run_scene"
+                )
+            with col_b2:
+                run_face_l = st.checkbox(
+                    "👤 Face Embeddings",
+                    value=True,
+                    key="local_run_face"
+                )
 
-        col_a2, col_b2 = st.columns(2)
-        with col_a2:
-            run_scene_l = st.checkbox("🎭 Scene Understanding (CLIP + YOLO)",
-                                      value=True, key="local_run_scene")
-        with col_b2:
-            run_face_l  = st.checkbox("👤 Face Embeddings (ArcFace)",
-                                      value=True, key="local_run_face")
+            if uploaded_files:
+                st.caption(f"✅ {len(uploaded_files)} file(s) selected")
 
-        if uploaded_files:
-            st.caption(f"✅ {len(uploaded_files)} file(s) selected")
+            st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+            col_empty, col_local_btn = st.columns([0.15, 0.85])
+            with col_local_btn:
+                process_btn_l = st.button(
+                    "🚀 Process Uploaded Photos",
+                    use_container_width=True,
+                    type="primary",
+                    disabled=(not uploaded_files),
+                    key="local_process_btn"
+                )
 
-        process_btn_l = st.button("🚀 Process Uploaded Photos",
-                                  use_container_width=True, type="primary",
-                                  disabled=(not uploaded_files),
-                                  key="local_process_btn")
-
-        if process_btn_l and uploaded_files:
-            if not event_name_l.strip():
+            if process_btn_l and uploaded_files:
+                if not event_name_l.strip():
+                    st.error("Please provide an event name.")
+                else:
+                    _run_local_upload_pipeline(
+                        uploaded_files, event_name_l.strip(),
+                        run_scene=run_scene_l, run_face=run_face_l
+                    )
                 st.error("Please provide an event name.")
             else:
                 _run_local_upload_pipeline(
@@ -356,14 +445,16 @@ def _run_ai_pipeline(image_paths: list, event_name: str,
             fig = px.bar(
                 df_scene, x="Scene", y="Count",
                 color="Count",
-                color_continuous_scale="Viridis",
-                template="plotly_dark"
+                color_continuous_scale=["#0EA5E9", "#3B82F6", "#8B5CF6"],
+                template="plotly_white"
             )
             fig.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=0, r=0, t=30, b=0)
+                margin=dict(l=0, r=0, t=30, b=0),
+                font=dict(family="Inter, sans-serif")
             )
+
             st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -378,18 +469,30 @@ def _run_ai_pipeline(image_paths: list, event_name: str,
 # ── Analytics Tab ─────────────────────────────────────────────────────────────
 
 def _render_analytics_tab():
-    st.markdown("## 📊 Platform Analytics")
+    st.markdown("""
+    <div style='text-align:center; padding-bottom: 1.5rem; animation: slideInDown 0.5s ease-out;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #111827; margin: 0;'>📊 Platform Analytics</h2>
+        <p style='color: #4B5563; font-size: 0.95rem; margin-top: 0.5rem; font-weight: 500;'>
+            Real-time insights about your platform
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     stats = get_photo_stats()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("🖼️ Total Photos", stats["total_photos"])
-    col2.metric("👥 Registered Users", stats["total_users"])
-    col3.metric("🔍 Total Searches", stats["total_searches"])
-    col4.metric("✅ Face Matches", stats["total_matches"])
+    col1, col2, col3, col4 = st.columns(4, gap="small")
+    with col1:
+        st.metric("🖼️ Total Photos", stats["total_photos"])
+    with col2:
+        st.metric("👥 Registered Users", stats["total_users"])
+    with col3:
+        st.metric("🔍 Total Searches", stats["total_searches"])
+    with col4:
+        st.metric("✅ Face Matches", stats["total_matches"])
 
-    st.markdown("---")
+    st.markdown("<div style='padding: 1.5rem 0;'></div>", unsafe_allow_html=True)
 
-    col_l, col_r = st.columns(2)
+    col_l, col_r = st.columns(2, gap="medium")
     with col_l:
         st.subheader("📁 Scene Distribution (All Events)")
         scene_counts = get_scene_counts()
@@ -399,13 +502,17 @@ def _render_analytics_tab():
             df["label"] = df["emoji"] + " " + df["scene"].str.replace("_", " ").str.title()
             fig = px.pie(
                 df, values="count", names="label",
-                template="plotly_dark",
-                color_discrete_sequence=px.colors.sequential.Plasma_r
+                template="plotly_white",
+                color_discrete_sequence=["#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6", "#A855F7"]
             )
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=0, r=0, t=30, b=0)
+                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(l=0, r=0, t=30, b=0),
+                font=dict(family="Inter, sans-serif"),
+                height=400
             )
+
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No photo data yet. Upload an event to see analytics.")
@@ -416,7 +523,7 @@ def _render_analytics_tab():
         if events:
             df_ev = pd.DataFrame(events)
             df_ev.columns = ["Event Name", "Photos", "Created At"]
-            st.dataframe(df_ev, use_container_width=True)
+            st.dataframe(df_ev, use_container_width=True, hide_index=True)
         else:
             st.info("No events uploaded yet.")
 
@@ -424,7 +531,15 @@ def _render_analytics_tab():
 # ── Event Manager Tab ─────────────────────────────────────────────────────────
 
 def _render_event_manager_tab():
-    st.markdown("## 🗂️ Event Manager")
+    st.markdown("""
+    <div style='text-align:center; padding-bottom: 1.5rem; animation: slideInDown 0.5s ease-out;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #111827; margin: 0;'>🗂️ Event Manager</h2>
+        <p style='color: #4B5563; font-size: 0.95rem; margin-top: 0.5rem; font-weight: 500;'>
+            Manage and organize your event collections
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     events = get_all_events()
 
     if not events:
@@ -436,29 +551,35 @@ def _render_event_manager_tab():
             f"📅 **{event['name']}** — {event['photo_count']} photos | Created: {event['created_at'][:10]}",
             expanded=False
         ):
-            col1, col2 = st.columns([3, 1])
+            col1, col2, col3 = st.columns([2, 1, 1])
             with col1:
                 scenes = get_scene_counts(event_name=event["name"])
                 if scenes:
                     df_s = pd.DataFrame(scenes)
                     df_s["emoji"] = df_s["scene"].map(SCENE_EMOJIS).fillna("📁")
                     df_s["Scene"] = df_s["emoji"] + " " + df_s["scene"].str.replace("_", " ").str.title()
-                    st.dataframe(df_s[["Scene", "count"]].rename(columns={"count": "Photos"}),
-                                 use_container_width=True)
+                    st.dataframe(
+                        df_s[["Scene", "count"]].rename(columns={"count": "Photos"}),
+                        use_container_width=True,
+                        hide_index=True
+                    )
+            
             with col2:
                 st.markdown("&nbsp;", unsafe_allow_html=True)
-                if st.button(f"🗑️ Delete Event", key=f"del_{event['name']}"):
+            
+            with col3:
+                if st.button(f"🗑️", key=f"del_{event['name']}", help="Delete event", use_container_width=True):
                     st.session_state[f"confirm_delete_{event['name']}"] = True
 
             if st.session_state.get(f"confirm_delete_{event['name']}"):
-                st.warning(f"⚠️ Are you sure you want to delete **{event['name']}** and all its photos?")
+                st.warning(f"⚠️ Delete **{event['name']}** and all its photos?")
                 c1, c2 = st.columns(2)
-                if c1.button("✅ Yes, Delete", key=f"yes_{event['name']}"):
+                if c1.button("✅ Yes, Delete", key=f"yes_{event['name']}", use_container_width=True):
                     delete_event_photos(event["name"])
                     st.session_state.pop(f"confirm_delete_{event['name']}", None)
                     st.success(f"Deleted event: {event['name']}")
                     st.rerun()
-                if c2.button("❌ Cancel", key=f"no_{event['name']}"):
+                if c2.button("❌ Cancel", key=f"no_{event['name']}", use_container_width=True):
                     st.session_state.pop(f"confirm_delete_{event['name']}", None)
                     st.rerun()
 

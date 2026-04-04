@@ -7,14 +7,12 @@ Run with:  streamlit run app.py
 import streamlit as st
 import sys
 import os
+import time
 from pathlib import Path
-
-
-
 from dotenv import load_dotenv
 
 # ── Load environment vars ──────────────────────────────────────────────────────
-load_dotenv(".env.example")  # falls back gracefully if .env not present
+load_dotenv(".env.example")
 load_dotenv(".env")
 
 # ── Ensure project root is on path ────────────────────────────────────────────
@@ -38,93 +36,219 @@ def _initialize_db():
 
 _initialize_db()
 
-# ── Custom CSS ─────────────────────────────────────────────────────────────────
+# ── Custom CSS — Clean & Modern Dark Theme ────────────────────────────────────
 st.markdown("""
 <style>
-    /* Hide default Streamlit menu and footer */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --bg-dark: #0a0a0a;
+        --bg-card: #111111;
+        --accent-green: #22c55e;
+        --accent-dark: #16a34a;
+        --text-primary: #ffffff;
+        --text-secondary: #d1d5db;
+        --gray-dim: #6b7280;
+        --border-color: #2d2d2d;
+    }
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif !important;
+        background-color: var(--bg-dark) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    /* ── Main content area ── */
+    .stMainBlockContainer {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    /* ── Headings ── */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+    }
+
+    /* ── Hero header style ── */
+    .facefind-header {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        padding: 2.5rem !important;
+        border-radius: 8px !important;
+        margin-bottom: 2rem !important;
+        text-align: center !important;
+    }
+
+    .facefind-header h1 {
+        color: var(--text-primary) !important;
+        font-size: 2.5rem !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .facefind-header p {
+        color: var(--text-secondary) !important;
+        font-size: 1rem !important;
+        margin: 0 !important;
+    }
+
+    /* ── Buttons ── */
+    .stButton > button {
+        background-color: var(--accent-green) !important;
+        color: var(--bg-dark) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.6rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+    }
+
+    .stButton > button:hover {
+        background-color: var(--accent-dark) !important;
+    }
+
+    /* ── Tabs ── */
+    .stTabs [data-baseweb="tab-list"] {
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 0.5rem 0 !important;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        padding: 0.75rem 1.5rem !important;
+        color: var(--gray-dim) !important;
+        border-radius: 0 !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        color: var(--accent-green) !important;
+        border-bottom: 2px solid var(--accent-green) !important;
+    }
+
+    /* ── Form inputs ── */
+    .stTextInput input,
+    .stSelectbox [data-baseweb="select"],
+    .stMultiSelect,
+    .stSlider,
+    textarea {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-primary) !important;
+        border-radius: 6px !important;
+    }
+
+    .stTextInput input::placeholder,
+    textarea::placeholder {
+        color: var(--gray-dim) !important;
+    }
+
+    .stTextInput input:focus,
+    .stSelectbox [data-baseweb="select"]:focus,
+    textarea:focus {
+        border-color: var(--accent-green) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* ── Metrics ── */
+    [data-testid="stMetric"] {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        padding: 1.5rem !important;
+    }
+
+    /* ── Images ── */
+    [data-testid="stImage"] img {
+        border-radius: 8px !important;
+        border: 1px solid var(--border-color) !important;
+    }
+
+    /* ── Sidebar ── */
+    [data-testid="stSidebar"] {
+        background-color: var(--bg-dark) !important;
+        border-right: 1px solid var(--border-color) !important;
+    }
+
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-testid="stSidebar"] [role="radiogroup"] {
+        background-color: var(--bg-card) !important;
+        border-radius: 6px !important;
+        padding: 0.5rem !important;
+    }
+
+    /* ── Alerts & Messages ── */
+    .stSuccess, .stError, .stWarning, .stInfo {
+        border-radius: 8px !important;
+        border: 1px solid !important;
+    }
+
+    .stSuccess {
+        background-color: rgba(34, 197, 94, 0.1) !important;
+        border-color: var(--accent-green) !important;
+    }
+
+    .stError {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+        border-color: #ef4444 !important;
+    }
+
+    .stWarning {
+        background-color: rgba(245, 158, 11, 0.1) !important;
+        border-color: #f59e0b !important;
+    }
+
+    .stInfo {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+        border-color: #3b82f6 !important;
+    }
+
+    /* ── Progress bar ── */
+    [data-testid="stProgress"] > div > div > div > div {
+        background-color: var(--accent-green) !important;
+    }
+
+    /* ── Hide menu ── */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Sidebar branding */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0F0C29, #302B63, #24243E);
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {
+        width: 8px !important;
     }
 
-    /* Header gradient */
-    .facefind-header {
-        background: linear-gradient(135deg, #6C63FF 0%, #3B82F6 50%, #8B5CF6 100%);
-        padding: 2rem 2rem 1.5rem;
-        border-radius: 16px;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-    .facefind-header h1 {
-        color: white;
-        font-size: 2.8rem;
-        font-weight: 800;
-        margin: 0;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .facefind-header p {
-        color: rgba(255,255,255,0.85);
-        font-size: 1.1rem;
-        margin: 0.5rem 0 0;
+    ::-webkit-scrollbar-track {
+        background: var(--bg-card) !important;
     }
 
-    /* Card styling */
-    .stMetric {
-        background: rgba(108,99,255,0.1);
-        border: 1px solid rgba(108,99,255,0.3);
-        border-radius: 12px;
-        padding: 1rem;
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-green) !important;
+        border-radius: 4px !important;
     }
 
-    /* Tab styling */
-    .stTabs [data-baseweb="tab"] {
-        font-size: 1rem;
-        font-weight: 600;
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-dark) !important;
     }
 
-    /* Buttons */
-    .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #6C63FF, #8B5CF6);
-        border: none;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
-    }
-    .stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(108, 99, 255, 0.6);
-    }
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+        .facefind-header {
+            padding: 1.5rem !important;
+        }
 
-    /* Image grid */
-    [data-testid="stImage"] {
-        border-radius: 12px;
-        overflow: hidden;
-    }
+        .facefind-header h1 {
+            font-size: 1.75rem !important;
+        }
 
-    /* Download button */
-    .stDownloadButton > button {
-        border-radius: 8px;
-        font-size: 0.85rem;
-        padding: 0.35rem 0.75rem;
-        background: rgba(16,185,129,0.15);
-        border-color: rgba(16,185,129,0.5);
-        color: #10B981;
-        transition: all 0.2s;
-    }
-    .stDownloadButton > button:hover {
-        background: #10B981;
-        color: white;
-    }
-
-    /* Expander */
-    [data-testid="stExpander"] {
-        border: 1px solid rgba(108,99,255,0.2);
-        border-radius: 12px;
+        .stButton > button {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.9rem !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -132,39 +256,37 @@ st.markdown("""
 # ── Sidebar Navigation ─────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
-    <div style='text-align:center; padding: 1.5rem 0 0.5rem;'>
-        <span style='font-size:3rem;'>🔍</span>
-        <h2 style='color:#6C63FF; margin:0; font-size:1.6rem; font-weight:800;'>FaceFind</h2>
-        <p style='color:#888; font-size:0.8rem; margin:0.2rem 0 0;'>AI Photo Discovery Platform</p>
+    <div style='text-align:center; padding: 1.5rem 0 1rem;'>
+        <h2 style='color: #ffffff; margin: 0; font-size: 1.5rem; font-weight: 800;'>FaceFind</h2>
+        <p style='color: #d1d5db; font-size: 0.85rem; margin: 0.3rem 0 0;'>AI Identity System</p>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("---")
 
     dashboard = st.radio(
-        "🧭 Navigate to",
+        "Navigate",
         options=["🧑‍💻 User Dashboard", "🛠️ Admin Dashboard"],
+        index=0,
         key="nav_radio"
     )
 
     st.markdown("---")
     st.markdown("""
-    <div style='color:#555; font-size:0.78rem; text-align:center; padding-top:0.5rem;'>
-        <b style='color:#6C63FF;'>How It Works</b><br><br>
-        1️⃣ Admin uploads Google Drive link<br>
-        2️⃣ AI classifies scenes & extracts faces<br>
-        3️⃣ User uploads selfie → finds their photos<br><br>
-        <b>Powered by</b><br>
-        🤖 CLIP + YOLOv8 | ArcFace + FAISS<br>
-        🗄️ DuckDB | 🎈 Streamlit
+    <div style='padding: 1rem 0; text-align: center;'>
+        <p style='color: #22c55e; font-size: 0.75rem; margin: 0 0 0.8rem; font-weight: 700;'>System Overview</p>
+        <p style='color: #d1d5db; font-size: 0.75rem; margin: 0; line-height: 1.6;'>
+            Upload photos → AI processes → Users find matches
+        </p>
     </div>
     """, unsafe_allow_html=True)
+
 
 # ── Hero Header ────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class='facefind-header'>
-    <h1>🔍 FaceFind</h1>
-    <p>AI-Powered Smart Photo Discovery · Scene Understanding · Face Recognition</p>
+    <h1>Face Recognition System</h1>
+    <p>Simple and secure identity detection</p>
 </div>
 """, unsafe_allow_html=True)
 

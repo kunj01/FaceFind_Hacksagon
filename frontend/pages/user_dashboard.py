@@ -37,12 +37,17 @@ def render_user_dashboard():
         _render_auth()
         return
 
-    # Logged-in header
-    st.sidebar.success(f"👤 {st.session_state.get('user_name', 'User')}")
-    if st.sidebar.button("🚪 Logout", key="user_logout"):
-        for key in ["user_logged_in", "user_name", "user_id", "user_email"]:
-            st.session_state.pop(key, None)
-        st.rerun()
+    # Logged-in header with modern design
+    col1, col2 = st.sidebar.columns([3, 1])
+    with col1:
+        st.sidebar.markdown(f"**👤 {st.session_state.get('user_name', 'User')}**")
+    with col2:
+        if st.sidebar.button("🚪", key="user_logout", help="Logout", use_container_width=True):
+            for key in ["user_logged_in", "user_name", "user_id", "user_email"]:
+                st.session_state.pop(key, None)
+            st.rerun()
+
+    st.sidebar.markdown("---")
 
     tabs = st.tabs([
         "🔍 Find My Photos",
@@ -63,59 +68,116 @@ def _render_auth():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("""
-        <div style='text-align:center; padding: 2rem 0 1rem;'>
-            <h1 style='font-size:3rem;'>🤳</h1>
-            <h2 style='color:#6C63FF;'>Welcome to FaceFind</h2>
-            <p style='color:#888;'>Find yourself in event photos instantly</p>
+        <div style='text-align:center; padding: 2rem 0 1.5rem; animation: fadeInUp 0.6s ease-out;'>
+            <h1 style='font-size:4rem; margin-bottom: 0.5rem;'>🤳</h1>
+            <h1 style='background: linear-gradient(135deg, #0EA5E9, #8B5CF6); 
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+                font-weight: 800; font-size: 2.5rem; margin: 0;'>
+                Welcome to FaceFind
+            </h1>
+            <p style='color:#4B5563; font-size: 1.05rem; margin: 0.5rem 0 0; font-weight: 500;'>
+                Find yourself in event photos instantly using AI
+            </p>
         </div>
         """, unsafe_allow_html=True)
 
-        tab_login, tab_register = st.tabs(["🔑 Login", "✨ Register"])
+        # Wrap auth in a clean card with animation
+        with st.container(border=True):
+            tab_login, tab_register = st.tabs(["🔑 Login", "✨ Register"])
 
-        with tab_login:
-            with st.form("user_login_form"):
-                email = st.text_input("📧 Email", placeholder="you@example.com")
-                password = st.text_input("🔒 Password", type="password", placeholder="••••••••")
-                submitted = st.form_submit_button("Login →", use_container_width=True)
+            with tab_login:
+                with st.form("user_login_form", border=False):
+                    st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                    email = st.text_input(
+                        "Email Address",
+                        placeholder="you@example.com",
+                        key="login_email"
+                    )
+                    password = st.text_input(
+                        "Password",
+                        type="password",
+                        placeholder="••••••••",
+                        key="login_password"
+                    )
+                    st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                    col_space, col_btn = st.columns([0.15, 0.85])
+                    with col_btn:
+                        submitted = st.form_submit_button(
+                            "Sign In",
+                            use_container_width=True,
+                            type="primary"
+                        )
 
-            if submitted:
-                user = verify_user(email, password)
-                if user and user["role"] == "user":
-                    _set_session(user)
-                    st.success("✅ Login successful!")
-                    time.sleep(0.5)
-                    st.rerun()
-                elif user and user["role"] == "admin":
-                    st.warning("⚠️ This is a user account login. Use the Admin Dashboard for admin access.")
-                else:
-                    st.error("❌ Invalid email or password.")
+                    if submitted:
+                        if not email.strip():
+                            st.error("Please enter your email.")
+                        elif not password.strip():
+                            st.error("Please enter your password.")
+                        else:
+                            user = verify_user(email, password)
+                            if user and user["role"] == "user":
+                                _set_session(user)
+                                st.success("✅ Login successful!")
+                                time.sleep(0.5)
+                                st.rerun()
+                            elif user and user["role"] == "admin":
+                                st.warning("⚠️ This is an admin account. Use the Admin Dashboard to login.")
+                            else:
+                                st.error("❌ Invalid email or password.")
 
-        with tab_register:
-            with st.form("register_form"):
-                name = st.text_input("👤 Full Name", placeholder="Ada Lovelace")
-                email_r = st.text_input("📧 Email", placeholder="you@example.com", key="reg_email")
-                password_r = st.text_input("🔒 Password", type="password",
-                                           placeholder="Min 6 characters", key="reg_pass")
-                confirm = st.text_input("🔒 Confirm Password", type="password",
-                                        placeholder="Repeat password", key="reg_confirm")
-                submitted_r = st.form_submit_button("Create Account →", use_container_width=True)
+            with tab_register:
+                with st.form("register_form", border=False):
+                    st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                    name = st.text_input(
+                        "Full Name",
+                        placeholder="Ada Lovelace",
+                        key="reg_name"
+                    )
+                    email_r = st.text_input(
+                        "Email Address",
+                        placeholder="you@example.com",
+                        key="reg_email"
+                    )
+                    password_r = st.text_input(
+                        "Password",
+                        type="password",
+                        placeholder="Min 6 characters",
+                        key="reg_pass"
+                    )
+                    confirm = st.text_input(
+                        "Confirm Password",
+                        type="password",
+                        placeholder="Repeat password",
+                        key="reg_confirm"
+                    )
+                    st.markdown("<div style='padding: 0.5rem 0;'></div>", unsafe_allow_html=True)
+                    col_space, col_btn = st.columns([0.15, 0.85])
+                    with col_btn:
+                        submitted_r = st.form_submit_button(
+                            "Create Account",
+                            use_container_width=True,
+                            type="primary"
+                        )
 
-            if submitted_r:
-                if not name.strip():
-                    st.error("Please enter your name.")
-                elif len(password_r) < 6:
-                    st.error("Password must be at least 6 characters.")
-                elif password_r != confirm:
-                    st.error("Passwords do not match.")
-                else:
-                    user = create_user(email_r.strip(), name.strip(), password_r, role="user")
-                    if user:
-                        _set_session(user)
-                        st.success("🎉 Account created! Welcome to FaceFind.")
-                        time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        st.error("An account with this email already exists.")
+                    if submitted_r:
+                        if not name.strip():
+                            st.error("Please enter your full name.")
+                        elif not email_r.strip():
+                            st.error("Please enter your email.")
+                        elif len(password_r) < 6:
+                            st.error("Password must be at least 6 characters.")
+                        elif password_r != confirm:
+                            st.error("Passwords do not match.")
+                        else:
+                            user = create_user(email_r.strip(), name.strip(), password_r, role="user")
+                            if user:
+                                _set_session(user)
+                                st.success("🎉 Account created! Welcome to FaceFind.")
+                                time.sleep(0.5)
+                                st.rerun()
+                            else:
+                                st.error("❌ An account with this email already exists.")
+
 
 
 def _set_session(user: dict):
@@ -128,60 +190,151 @@ def _set_session(user: dict):
 # ── Search Tab ────────────────────────────────────────────────────────────────
 
 def _render_search_tab():
-    st.markdown("## 🔍 Find My Photos")
-    st.markdown("Take a selfie with your camera — FaceFind will locate you across all event photos.")
+    st.markdown("""
+    <div style='text-align:center; padding-bottom: 1.5rem; animation: slideInDown 0.5s ease-out;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #111827; margin: 0;'>🔍 Find My Photos</h2>
+        <p style='color: #4B5563; font-size: 0.95rem; margin-top: 0.5rem; font-weight: 500;'>
+            Upload a photo and AI will find you across all event galleries
+        </p>
+    </div>
+    
+    <style>
+        /* Camera input styling */
+        [data-testid="stCameraInputWebcamStyledBox"] {
+            width: 100% !important;
+            height: 500px !important;
+            min-height: 500px !important;
+            border-radius: 12px !important;
+            border: 2px solid #0EA5E9 !important;
+        }
+        
+        [data-testid="stCameraInputWebcamStyledBox"] canvas,
+        [data-testid="stCameraInputWebcamStyledBox"] video {
+            width: 100% !important;
+            height: 500px !important;
+            object-fit: cover !important;
+            border-radius: 12px !important;
+        }
+        
+        /* Camera container */
+        [data-testid="stCameraInput"] {
+            width: 100% !important;
+        }
+        
+        /* Make file uploader look clean */
+        .stFileUploader section {
+            padding: 0 !important;
+            min-height: 0 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-    col_left, col_right = st.columns([1, 1])
+    # Initialize variables
+    selfie_bytes = None
+    uploaded_file = None
+    selected_scenes = []
+    selected_event_search = "All Events"
+    sensitivity = 0.75
 
-    with col_left:
-        st.markdown("### 📸 Capture Your Face")
+    # Main search container
+    with st.container(border=True):
+        col_left, col_right = st.columns([1.6, 1], gap="large")
 
-        selfie_bytes = None
+        # LEFT COLUMN: Photo Input
+        with col_left:
+            st.markdown("#### 📸 Get Your Face")
+            st.caption("Capture a selfie or browse your gallery")
+            
+            # Camera feed
+            camera_img = st.camera_input(
+                "Capture Selfie",
+                key="camera_selfie",
+                label_visibility="collapsed"
+            )
+            if camera_img:
+                selfie_bytes = camera_img.getbuffer()
+            
+            # Browse file uploader
+            st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+            uploaded_file = st.file_uploader(
+                "📁 Or Browse from Gallery",
+                type=["jpg", "jpeg", "png"],
+                key="selfie_upload",
+                label_visibility="collapsed"
+            )
+            
+            if uploaded_file:
+                selfie_bytes = uploaded_file.getbuffer()
 
-        camera_img = st.camera_input(
-            "Click 📷 to take your selfie",
-            key="camera_selfie"
+            if selfie_bytes:
+                st.markdown("""
+                <div style='
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                    border-radius: 12px;
+                    padding: 0.75rem;
+                    text-align: center;
+                    color: #059669;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    margin-top: 1rem;
+                    animation: slideInDown 0.3s ease-out;
+                '>
+                    ✅ Photo ready for search
+                </div>
+                """, unsafe_allow_html=True)
+
+        # RIGHT COLUMN: Filters
+        with col_right:
+            st.markdown("#### 🎯 Filter Results")
+            st.caption("Optional filters to refine your search")
+
+            scene_counts = get_scene_counts()
+            available_scenes = [sc["scene"] for sc in scene_counts]
+
+            if available_scenes:
+                selected_scenes = st.multiselect(
+                    "Scenes",
+                    options=available_scenes,
+                    format_func=lambda s: f"{SCENE_EMOJIS.get(s, '📁')} {s.replace('_', ' ').title()}",
+                    key="scene_filter_ms",
+                    placeholder="Leave empty to search all"
+                )
+            else:
+                selected_scenes = []
+                st.info("No photos uploaded yet. Ask admin to upload event photos first.")
+
+            events = get_all_events()
+            event_options = ["All Events"] + [e["name"] for e in events]
+            selected_event_search = st.selectbox(
+                "Event",
+                options=event_options,
+                key="event_filter_sel"
+            )
+
+            col_sens_label, col_sens_value = st.columns([0.6, 0.4])
+            with col_sens_label:
+                st.markdown("#### 🎚️ Sensitivity")
+            with col_sens_value:
+                st.markdown("<span style='color: #0EA5E9; font-weight: 700;' id='sens-val'>75%</span>", unsafe_allow_html=True)
+
+            sensitivity = st.slider(
+                "Match Sensitivity (higher = stricter matching)",
+                min_value=0.2, max_value=0.95, value=0.75, step=0.05,
+                key="sensitivity_slider",
+                label_visibility="collapsed"
+            )
+
+    # Search button - positioned prominently
+    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+    col_empty, col_search = st.columns([0.15, 0.85])
+    with col_search:
+        search_btn = st.button(
+            "🚀 Start Searching",
+            use_container_width=True,
+            type="primary",
+            disabled=(selfie_bytes is None)
         )
-        if camera_img:
-            selfie_bytes = camera_img.getbuffer()
-            st.success("✅ Photo captured!")
-
-    with col_right:
-        st.markdown("### 🎭 Scene Filter (Optional)")
-        st.caption("Narrow search to specific scene categories")
-
-        scene_counts = get_scene_counts()
-        available_scenes = [sc["scene"] for sc in scene_counts]
-
-        selected_scenes = st.multiselect(
-            "Select scenes (leave empty to search all)",
-            options=available_scenes,
-            format_func=lambda s: f"{SCENE_EMOJIS.get(s, '📁')} {s.replace('_', ' ').title()}",
-            key="scene_filter_ms"
-        )
-
-        st.markdown("### 📅 Event Filter (Optional)")
-        events = get_all_events()
-        event_options = ["All Events"] + [e["name"] for e in events]
-        selected_event_search = st.selectbox(
-            "Narrow to a specific event",
-            options=event_options,
-            key="event_filter_sel"
-        )
-
-        sensitivity = st.slider(
-            "🎯 Match Sensitivity",
-            min_value=0.2, max_value=0.95, value=0.75, step=0.05,
-            help="Lower = more results (fewer false negatives). Higher = stricter."
-        )
-
-    st.markdown("---")
-    search_btn = st.button(
-        "🚀 Find My Photos",
-        use_container_width=True,
-        type="primary",
-        disabled=(selfie_bytes is None)
-    )
 
     if search_btn and selfie_bytes:
         _run_face_search(
@@ -260,7 +413,15 @@ def _run_face_search(selfie_bytes, selected_scenes, selected_event, sensitivity)
 # ── Library Tab ───────────────────────────────────────────────────────────────
 
 def _render_library_tab():
-    st.markdown("## 📚 My Matched Photos")
+    st.markdown("""
+    <div style='text-align:center; padding-bottom: 1.5rem; animation: slideInDown 0.5s ease-out;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #111827; margin: 0;'>📚 My Matched Photos</h2>
+        <p style='color: #4B5563; font-size: 0.95rem; margin-top: 0.5rem; font-weight: 500;'>
+            Your favorite photos from all events
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
     user_id = st.session_state["user_id"]
     photos = get_user_matched_photos(user_id)
 
@@ -275,20 +436,27 @@ def _render_library_tab():
         st.info("No matches with 60% or higher confidence yet.")
         return
 
-    # Stats row
-    col1, col2, col3 = st.columns(3)
-    col1.metric("🖼️ Total Matches", len(photos))
-    events_in_matches = len(set(p["event_name"] for p in photos))
-    col2.metric("📅 Events", events_in_matches)
-    scenes_in_matches = len(set(p["scene_label"] for p in photos))
-    col3.metric("🎭 Scene Types", scenes_in_matches)
+    # Stats row with smooth animations
+    col1, col2, col3 = st.columns(3, gap="small")
+    with col1:
+        st.metric("🖼️ Total Matches", len(photos))
+    with col2:
+        events_in_matches = len(set(p["event_name"] for p in photos))
+        st.metric("📅 Events", events_in_matches)
+    with col3:
+        scenes_in_matches = len(set(p["scene_label"] for p in photos))
+        st.metric("🎭 Scene Types", scenes_in_matches)
 
-    st.markdown("---")
+    st.markdown("<div style='padding: 1rem 0;'></div>", unsafe_allow_html=True)
 
     # Filter by event
     event_names = list(set(p["event_name"] for p in photos if p["event_name"]))
     if event_names:
-        filter_event = st.selectbox("📅 Filter by Event", ["All"] + event_names)
+        filter_event = st.selectbox(
+            "Filter by Event",
+            ["All"] + event_names,
+            key="library_event_filter"
+        )
         if filter_event != "All":
             photos = [p for p in photos if p["event_name"] == filter_event]
 
@@ -299,39 +467,53 @@ def _render_library_tab():
 # ── Browse Tab ────────────────────────────────────────────────────────────────
 
 def _render_browse_tab():
-    st.markdown("## 🗂️ Browse Photos by Scene")
+    st.markdown("""
+    <div style='text-align:center; padding-bottom: 1.5rem; animation: slideInDown 0.5s ease-out;'>
+        <h2 style='font-size: 2rem; font-weight: 800; color: #111827; margin: 0;'>🗂️ Browse Photos by Scene</h2>
+        <p style='color: #4B5563; font-size: 0.95rem; margin-top: 0.5rem; font-weight: 500;'>
+            Explore event photography organized by AI detection
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    events = get_all_events()
-    event_names = ["All Events"] + [e["name"] for e in events]
-    selected_event = st.selectbox("📅 Select Event", event_names, key="browse_event_user")
-    event_filter = None if selected_event == "All Events" else selected_event
+    with st.container(border=True):
+        events = get_all_events()
+        event_names = ["All Events"] + [e["name"] for e in events]
+        selected_event = st.selectbox(
+            "Select Event to Browse",
+            event_names,
+            key="browse_event_user"
+        )
+        event_filter = None if selected_event == "All Events" else selected_event
 
-    scene_counts = get_scene_counts(event_name=event_filter)
-    if not scene_counts:
-        st.info("No photos found. Ask your admin to upload event photos.")
-        return
+        scene_counts = get_scene_counts(event_name=event_filter)
+        if not scene_counts:
+            st.info("No photos found. Ask your admin to upload event photos.")
+            return
 
-    # Scene cards
-    SCENE_COLS = 5
-    cols = st.columns(SCENE_COLS)
-    for i, sc in enumerate(scene_counts):
-        emoji = SCENE_EMOJIS.get(sc["scene"], "📁")
-        label = sc["scene"].replace("_", " ").title()
-        with cols[i % SCENE_COLS]:
-            if st.button(
-                f"{emoji}\n{label}\n{sc['count']} photos",
-                key=f"user_scene_{sc['scene']}_{i}",
-                use_container_width=True
-            ):
-                st.session_state["user_browse_scene"] = sc["scene"]
-                st.session_state["user_browse_event"] = event_filter
+        # Scene cards with smooth animations
+        st.markdown("<div style='padding: 1rem 0;'></div>", unsafe_allow_html=True)
+        SCENE_COLS = 5
+        cols = st.columns(SCENE_COLS, gap="small")
+        for i, sc in enumerate(scene_counts):
+            emoji = SCENE_EMOJIS.get(sc["scene"], "📁")
+            label = sc["scene"].replace("_", " ").title()
+            with cols[i % SCENE_COLS]:
+                if st.button(
+                    f"{emoji}\n{label}\n{sc['count']} 📷",
+                    key=f"user_scene_{sc['scene']}_{i}",
+                    use_container_width=True
+                ):
+                    st.session_state["user_browse_scene"] = sc["scene"]
+                    st.session_state["user_browse_event"] = event_filter
 
     selected_scene = st.session_state.get("user_browse_scene")
     if selected_scene:
+        st.markdown("<div style='padding: 1rem 0;'></div>", unsafe_allow_html=True)
         ev = st.session_state.get("user_browse_event", event_filter)
         photos = get_photos_by_scene(selected_scene, event_name=ev)
         emoji = SCENE_EMOJIS.get(selected_scene, "📁")
-        st.markdown(f"---\n### {emoji} {selected_scene.replace('_', ' ').title()}")
+        st.markdown(f"#### {emoji} {selected_scene.replace('_', ' ').title()}")
         st.caption(f"{len(photos)} photos")
         if photos:
             _render_photo_grid(photos)
