@@ -269,8 +269,17 @@ def _run_ai_pipeline(image_paths: list, event_name: str,
         return
 
     st.subheader("🤖 AI Processing Pipeline")
-    ai_progress = st.progress(0, text="Starting AI pipeline…")
+    ai_progress = st.progress(0, text="Initializing AI engines…")
     status_area = st.empty()
+    
+    # Pre-load engines for better UX
+    if run_scene:
+        status_area.info("🧠 Loading Scene Engine (CLIP + YOLOv8)…")
+        scene_engine._load_models()
+    if run_face:
+        status_area.info("👤 Loading Face Engine (face_recognition)…")
+        face_engine._load()
+    
     results_log = []
     scene_tally = {}
 

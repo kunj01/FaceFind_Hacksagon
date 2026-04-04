@@ -71,8 +71,13 @@ class SceneEngine:
             self._text_features = self._clip_model.encode_text(tokens)
             self._text_features = self._text_features / self._text_features.norm(dim=-1, keepdim=True)
 
-        # YOLOv8 nano (auto-downloads on first use)
-        self._yolo_model = YOLO("yolov8n.pt")
+        # YOLOv8 nano (auto-downloads on first use if not found)
+        # Search for model in local project first
+        model_path = Path(__file__).parent.parent / "yolov8n.pt"
+        if not model_path.exists():
+            model_path = "yolov8n.pt" # Fallback to default search
+        
+        self._yolo_model = YOLO(str(model_path))
 
         self._loaded = True
 
@@ -95,6 +100,7 @@ class SceneEngine:
         try:
             image = Image.open(image_path).convert("RGB")
         except Exception as e:
+            print(f"❌ Error opening image {image_path}: {e}")
             return {
                 "scene": "unknown", "scene_label": "Unknown", "confidence": 0.0,
                 "objects": [], "object_count": 0, "emoji": "❓"

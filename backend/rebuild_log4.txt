@@ -1,0 +1,262 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1775288702.862269   24488 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 881, in <module>
+    assert len(_ANY_TO_TF) == sum(
+AssertionError
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 290, in <module>
+    trace_type.register_serializable(DType)
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\core\function\trace_type\serialization.py", line 58, in register_serializable
+    raise ValueError(
+ValueError: Existing Python class DType already has SerializedDType as its associated proto representation. Please ensure DType has a unique proto representation.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 290, in <module>
+    trace_type.register_serializable(DType)
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\core\function\trace_type\serialization.py", line 58, in register_serializable
+    raise ValueError(
+ValueError: Existing Python class DType already has SerializedDType as its associated proto representation. Please ensure DType has a unique proto representation.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 290, in <module>
+    trace_type.register_serializable(DType)
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\core\function\trace_type\serialization.py", line 58, in register_serializable
+    raise ValueError(
+ValueError: Existing Python class DType already has SerializedDType as its associated proto representation. Please ensure DType has a unique proto representation.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 290, in <module>
+    trace_type.register_serializable(DType)
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\core\function\trace_type\serialization.py", line 58, in register_serializable
+    raise ValueError(
+ValueError: Existing Python class DType already has SerializedDType as its associated proto representation. Please ensure DType has a unique proto representation.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 290, in <module>
+    trace_type.register_serializable(DType)
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\core\function\trace_type\serialization.py", line 58, in register_serializable
+    raise ValueError(
+ValueError: Existing Python class DType already has SerializedDType as its associated proto representation. Please ensure DType has a unique proto representation.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\rebuild_index.py", line 40, in rebuild
+    added = face_engine.process_image(local_path, photo_id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 168, in process_image
+    embeddings = self.extract_embeddings(image_path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\last\Facefind_Ai\services\face_engine.py", line 65, in extract_embeddings
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__ import autograph
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\autograph\__init__.py", line 8, in <module>
+    from tensorflow.python.autograph.core.ag_ctx import control_status_ctx # line: 34
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\core\ag_ctx.py", line 21, in <module>
+    from tensorflow.python.autograph.utils import ag_logging
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\__init__.py", line 17, in <module>
+    from tensorflow.python.autograph.utils.context_managers import control_dependency_on_returns
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\autograph\utils\context_managers.py", line 19, in <module>
+    from tensorflow.python.framework import ops
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\ops.py", line 50, in <module>
+    from tensorflow.python.eager import context
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\context.py", line 38, in <module>
+    from tensorflow.python.eager import execute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\eager\execute.py", line 21, in <module>
+    from tensorflow.python.framework import dtypes
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\framework\dtypes.py", line 290, in <module>
+    trace_type.register_serializable(DType)
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\core\function\trace_type\serialization.py", line 58, in register_serializable
+    raise ValueError(
+ValueError: Existing Python class DType already has SerializedDType as its associated proto representation. Please ensure DType has a unique proto representation.
+Resetting FAISS index...
+Found 7 photos to process.
+Processing data\uploads\2026\IMG_4528.JPG...
+   Failed!
+Processing data\uploads\2026\IMG-20240126-WA0001.jpg...
+   Failed!
+Processing data\uploads\2026\IMG-20260109-WA0003.jpg...
+   Failed!
+Processing data\uploads\2026\IMG-20250503-WA0017.jpg...
+   Failed!
+Processing data\uploads\2026\23IT136_Award.jpg...
+   Failed!
+Processing data\uploads\2026\WhatsApp Image 2025-11-15 at 23.01.36_96668066.jpg...
+   Failed!
+Processing data\uploads\2026\23IT136_Photo.jpg...
+   Failed!
+Done rebuilding index!

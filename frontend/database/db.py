@@ -14,7 +14,10 @@ DB_PATH = os.getenv("DB_PATH", "data/facefind.duckdb")
 
 def get_connection():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    return duckdb.connect(DB_PATH)
+    conn = duckdb.connect(DB_PATH)
+    conn.execute("PRAGMA memory_limit='2GB'")
+    conn.execute("PRAGMA threads=4")
+    return conn
 
 
 def init_db():

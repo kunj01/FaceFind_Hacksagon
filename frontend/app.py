@@ -9,15 +9,7 @@ import sys
 import os
 from pathlib import Path
 
-# --- NumPy 2.x Hotfix for TensorFlow ---
-import numpy as np
-if not hasattr(np, 'float8_e4m3fn'):
-    np.float8_e4m3fn = np.float16
-    np.float8_e5m2 = np.float16
-    np.object_ = object
-    np.bool_ = bool
-    np.complex_ = complex
-# ---------------------------------------
+
 
 from dotenv import load_dotenv
 

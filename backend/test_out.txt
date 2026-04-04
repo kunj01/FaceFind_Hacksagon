@@ -1,0 +1,35 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1775288047.090406   11480 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Traceback (most recent call last):
+  File "D:\last\Facefind_Ai\test_deepface.py", line 2, in <module>
+    from deepface import DeepFace
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\deepface\DeepFace.py", line 15, in <module>
+    import tensorflow as tf
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\__init__.py", line 49, in <module>
+    from tensorflow._api.v2 import __internal__
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\__init__.py", line 11, in <module>
+    from tensorflow._api.v2.__internal__ import distribute
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\distribute\__init__.py", line 8, in <module>
+    from tensorflow._api.v2.__internal__.distribute import combinations
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\_api\v2\__internal__\distribute\combinations\__init__.py", line 8, in <module>
+    from tensorflow.python.distribute.combinations import env # line: 456
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\distribute\combinations.py", line 33, in <module>
+    from tensorflow.python.distribute import collective_all_reduce_strategy
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\distribute\collective_all_reduce_strategy.py", line 33, in <module>
+    from tensorflow.python.distribute import mirrored_strategy
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\distribute\mirrored_strategy.py", line 34, in <module>
+    from tensorflow.python.distribute.cluster_resolver import tfconfig_cluster_resolver
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\distribute\cluster_resolver\__init__.py", line 27, in <module>
+    from tensorflow.python.distribute.cluster_resolver.gce_cluster_resolver import GCEClusterResolver
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\tensorflow\python\distribute\cluster_resolver\gce_cluster_resolver.py", line 24, in <module>
+    from googleapiclient import discovery  # pylint: disable=g-import-not-at-top
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\googleapiclient\discovery.py", line 48, in <module>
+    import httplib2
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\httplib2\__init__.py", line 51, in <module>
+    from . import auth
+  File "C:\Users\DISHA VEKARIA\AppData\Roaming\Python\Python311\site-packages\httplib2\auth.py", line 22, in <module>
+    params = pp.Dict(pp.DelimitedList(pp.Group(auth_param)))
+                     ^^^^^^^^^^^^^^^^
+AttributeError: module 'pyparsing' has no attribute 'DelimitedList'. Did you mean: 'delimitedList'?

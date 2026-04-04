@@ -171,7 +171,7 @@ def _render_search_tab():
 
         sensitivity = st.slider(
             "🎯 Match Sensitivity",
-            min_value=0.2, max_value=0.95, value=0.40, step=0.05,
+            min_value=0.2, max_value=0.95, value=0.75, step=0.05,
             help="Lower = more results (fewer false negatives). Higher = stricter."
         )
 
@@ -213,15 +213,20 @@ def _run_face_search(selfie_bytes, selected_scenes, selected_event, sensitivity)
                         allowed_ids.add(p["id"])
 
             # Temporarily override distance threshold per sensitivity
+            # High sensitivity (0.9) means strict (0.33 threshold).
+            # Low sensitivity (0.4) means loose (0.51 threshold).
             import services.face_engine as fe_mod
             original_threshold = fe_mod.DISTANCE_THRESHOLD
-            fe_mod.DISTANCE_THRESHOLD = round(1.0 - sensitivity + 0.4, 3)
+            fe_mod.DISTANCE_THRESHOLD = round(0.65 - (sensitivity * 0.35), 3)
 
             match_results = face_engine.search(
                 selfie_path=selfie_path,
                 top_k=100,
                 allowed_photo_ids=allowed_ids
             )
+
+            # Apply hard threshold: Only show 60% or above
+            match_results = [m for m in match_results if m.get("confidence", 0) >= 0.6]
 
             fe_mod.DISTANCE_THRESHOLD = original_threshold
 
@@ -261,6 +266,13 @@ def _render_library_tab():
 
     if not photos:
         st.info("No matched photos yet. Go to **Find My Photos** tab and take a selfie!")
+        return
+
+    # Apply hard threshold: Only show 60% or above in Library
+    photos = [p for p in photos if p.get("confidence", 0) >= 0.6]
+
+    if not photos:
+        st.info("No matches with 60% or higher confidence yet.")
         return
 
     # Stats row
@@ -334,6 +346,15 @@ def _render_photo_grid(photos: list, show_confidence: bool = False,
     """Render a responsive photo grid with optional confidence badge and download."""
     if conf_map is None:
         conf_map = {}
+
+    # Apply hard threshold: 60%+ if confidence is requested (Search/Library)
+    if show_confidence:
+        photos = [p for p in photos if conf_map.get(p["id"], p.get("confidence", 0)) >= 0.6]
+
+    if not photos:
+        if show_confidence:
+             st.info("No photos found with a high enough match (min 60%).")
+        return
 
     for row_start in range(0, len(photos), cols):
         row = photos[row_start:row_start + cols]

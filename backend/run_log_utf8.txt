@@ -1,0 +1,110 @@
+﻿
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8503
+  Network URL: http://192.168.36.110:8503
+
+python : WARNING: All log messages 
+before absl::InitializeLog() is 
+called are written to STDERR
+At line:1 char:1
++ python -m streamlit run app.py > 
+run_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotS 
+   pecified: (WARNING: All lo...i  
+  tten to STDERR:String) [], Rem   
+ oteException
+    + FullyQualifiedErrorId : Nati 
+   veCommandError
+ 
+I0000 00:00:1775286822.108028   
+30296 port.cc:153] oneDNN custom 
+operations are on. You may see 
+slightly different numerical 
+results due to floating-point 
+round-off errors from different 
+computation orders. To turn them 
+off, set the environment variable 
+`TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-04 12:43:44.567 Please 
+replace `use_container_width` with 
+`width`.
+
+`use_container_width` will be 
+removed after 2025-12-31.
+
+For `use_container_width=True`, 
+use `width='stretch'`. For 
+`use_container_width=False`, use 
+`width='content'`.
+2026-04-04 12:43:44.596 Please 
+replace `use_container_width` with 
+`width`.
+
+`use_container_width` will be 
+removed after 2025-12-31.
+
+For `use_container_width=True`, 
+use `width='stretch'`. For 
+`use_container_width=False`, use 
+`width='content'`.
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Traceback (most recent call last) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  C:\Users\DISHA                                                                        
+  VEKARIA\AppData\Roaming\Python\Python311\site-packages\streamlit\runtime\scriptrunne  
+  r\exec_code.py:129 in exec_func_with_error_handling                                   
+                                                                                        
+  C:\Users\DISHA                                                                        
+  VEKARIA\AppData\Roaming\Python\Python311\site-packages\streamlit\runtime\scriptrunne  
+  r\script_runner.py:687 in code_to_exec                                                
+                                                                                        
+  C:\Users\DISHA                                                                        
+  VEKARIA\AppData\Roaming\Python\Python311\site-packages\streamlit\runtime\scriptrunne  
+  r\script_runner.py:166 in _mpa_v1                                                     
+                                                                                        
+  C:\Users\DISHA                                                                        
+  VEKARIA\AppData\Roaming\Python\Python311\site-packages\streamlit\navigation\page.py:  
+  380 in run                                                                            
+                                                                                        
+  D:\last\Facefind_Ai\app.py:182 in <module>                                            
+                                                                                        
+    179 # ΓöÇΓöÇ Route to Dashboard ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+    180 if "Admin" in dashboard:                                                        
+    181 Γöé   from pages.admin_dashboard import render_admin_dashboard                    
+  > 182 Γöé   render_admin_dashboard()                                                    
+    183 else:                                                                           
+    184 Γöé   from pages.user_dashboard import render_user_dashboard                      
+    185 Γöé   render_user_dashboard()                                                     
+                                                                                        
+  D:\last\Facefind_Ai\pages\admin_dashboard.py:65 in render_admin_dashboard             
+                                                                                        
+     62 Γöé   with tabs[0]:                                                               
+     63 Γöé   Γöé   _render_upload_tab()                                                    
+     64 Γöé   with tabs[1]:                                                               
+  >  65 Γöé   Γöé   _render_analytics_tab()                                                 
+     66 Γöé   with tabs[2]:                                                               
+     67 Γöé   Γöé   _render_event_manager_tab()                                             
+     68 Γöé   with tabs[3]:                                                               
+                                                                                        
+  D:\last\Facefind_Ai\pages\admin_dashboard.py:386 in _render_analytics_tab             
+                                                                                        
+    383 Γöé   col_l, col_r = st.columns(2)                                                
+    384 Γöé   with col_l:                                                                 
+    385 Γöé   Γöé   st.subheader("≡ƒôü Scene Distribution (All Events)")                      
+  > 386 Γöé   Γöé   scene_counts = get_scene_counts()                                       
+    387 Γöé   Γöé   if scene_counts:                                                        
+    388 Γöé   Γöé   Γöé   df = pd.DataFrame(scene_counts)                                     
+    389 Γöé   Γöé   Γöé   df["emoji"] = df["scene"].map(SCENE_EMOJIS).fillna("≡ƒôü")            
+                                                                                        
+  D:\last\Facefind_Ai\database\db.py:162 in get_scene_counts                            
+                                                                                        
+    159 Γöé   Γöé   Γöé   [event_name]                                                        
+    160 Γöé   Γöé   ).fetchall()                                                            
+    161 Γöé   else:                                                                       
+  > 162 Γöé   Γöé   rows = conn.execute(                                                    
+    163 Γöé   Γöé   Γöé   "SELECT scene_label, COUNT(*) as cnt FROM photos GROUP BY scene_la  
+    164 Γöé   Γöé   ).fetchall()                                                            
+    165 Γöé   conn.close()                                                                
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+OutOfMemoryException: Out of Memory Error: Allocation failure
