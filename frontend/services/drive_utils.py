@@ -13,6 +13,8 @@ import re
 import requests
 import gdown
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "data/uploads")
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
@@ -47,50 +49,82 @@ def extract_file_id(drive_url: str) -> str | None:
     return None
 
 
+# ── Session pool for faster downloads ─────────────────────────────────────────
+
+_session_lock = threading.Lock()
+_sessions = {}
+
+def _get_session():
+    """Get or create a thread-local requests session with aggressive connection pooling."""
+    thread_id = threading.get_ident()
+    if thread_id not in _sessions:
+        session = requests.Session()
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        
+        # AGGRESSIVE retry strategy
+        retry = Retry(
+            total=1,  # Only 1 retry
+            backoff_factor=0.1,  # Very short backoff
+            status_forcelist=[429, 500, 502, 503, 504]
+        )
+        # MASSIVE connection pooling
+        adapter = HTTPAdapter(
+            max_retries=retry,
+            pool_connections=20,  # Up from 10
+            pool_maxsize=20  # Up from 10
+        )
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        _sessions[thread_id] = session
+    return _sessions[thread_id]
+
+
 # ── Single-file download (handles virus-scan confirmation) ────────────────────
 
 def _download_file_with_confirm(file_id: str, dest_path: str) -> bool:
     """
-    Download a single Drive file, handling Google's virus-scan warning page.
-    Returns True on success.
+    Download a single Drive file using PURE REQUESTS (no gdown overhead).
+    Returns True on success. ULTRA-OPTIMIZED for speed.
     """
-    # Try gdown first (handles confirm token automatically)
     try:
-        result = gdown.download(
-            id=file_id,
-            output=dest_path,
-            quiet=True,
-            fuzzy=True,
-        )
-        if result and Path(result).exists() and Path(result).stat().st_size > 0:
-            return True
-    except Exception:
-        pass
-
-    # Fallback: requests with confirm token
-    try:
-        session = requests.Session()
+        session = _get_session()
+        
+        # Direct Google Drive download URL
         url = f"https://drive.google.com/uc?export=download&id={file_id}"
-        response = session.get(url, stream=True, timeout=30)
+        
+        # First request with NO timeout initially, then check response
+        response = session.get(url, stream=True, timeout=8, allow_redirects=True)
 
-        # Check for virus-scan confirmation page
-        if "confirm=" in response.text or "download_warning" in response.url:
-            confirm_match = re.search(r"confirm=([0-9A-Za-z_]+)", response.text)
+        # If HTML response (virus scan page), extract confirm token
+        if response.status_code == 200 and "text/html" in response.headers.get("Content-Type", ""):
+            # Try to extract confirm token from HTML
+            confirm_match = re.search(r'confirm=([0-9A-Za-z_]+)', response.text)
             if confirm_match:
                 confirm_token = confirm_match.group(1)
                 url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm={confirm_token}"
-                response = session.get(url, stream=True, timeout=60)
+                response = session.get(url, stream=True, timeout=12, allow_redirects=True)
 
-        # Write file if content looks like an image
+        # Check if we got the file
         content_type = response.headers.get("Content-Type", "")
-        if response.status_code == 200 and (
-            "image" in content_type or "octet-stream" in content_type
-        ):
+        content_length = response.headers.get("Content-Length", 0)
+        
+        if response.status_code == 200:
+            # Write file with LARGE chunks
             with open(dest_path, "wb") as f:
-                for chunk in response.iter_content(chunk_size=32768):
-                    f.write(chunk)
-            if Path(dest_path).stat().st_size > 1000:
+                for chunk in response.iter_content(chunk_size=1048576):  # 1MB chunks
+                    if chunk:
+                        f.write(chunk)
+            
+            # Verify file size
+            size = Path(dest_path).stat().st_size
+            if size > 500:  # At least 500 bytes
                 return True
+            else:
+                try:
+                    os.unlink(dest_path)
+                except:
+                    pass
     except Exception:
         pass
 
@@ -144,12 +178,12 @@ def download_drive_folder(
     progress_callback=None,
 ) -> list[str]:
     """
-    Download all images from a Google Drive folder URL.
+    Download all images from a Google Drive folder URL (ULTRA-FAST).
 
-    Tries these strategies in order:
-      1. gdown.download_folder (bulk, fastest)
-      2. Per-file download using folder listing
-      3. Raises RuntimeError if nothing downloaded
+    Strategy:
+      1. Scrape folder HTML for file IDs (no gdown overhead)
+      2. Parallel download with 8-12 concurrent workers
+      3. Aggressive timeout handling with fallback retries
 
     Args:
         drive_url: Publicly shared Google Drive folder URL
@@ -166,80 +200,92 @@ def download_drive_folder(
     dest_dir = Path(UPLOAD_DIR) / event_name
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    # Always clean orphaned .part files before starting (avoids WinError 32)
+    # Always clean orphaned .part files before starting
     _cleanup_partial_files(str(dest_dir))
 
     downloaded_paths: list[str] = []
 
-    # ── Strategy 1: gdown.download_folder ────────────────────────────────
+    # ── Strategy 1: FAST folder scraping (no gdown overhead) ───────────────
+    file_list = []
+    
     try:
-        gdown.download_folder(
-            id=folder_id,
-            output=str(dest_dir),
-            quiet=False,
-            use_cookies=False,
-            remaining_ok=True,
+        resp = _get_session().get(
+            f"https://drive.google.com/drive/folders/{folder_id}",
+            timeout=8,
         )
-        for f in dest_dir.rglob("*"):
-            if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS:
-                downloaded_paths.append(str(f))
-    except OSError as e:
-        if e.winerror == 32:   # file locked (WinError 32) — clean and continue
-            _cleanup_partial_files(str(dest_dir))
-        downloaded_paths = []  # reset, try per-file strategy
-    except Exception:
-        downloaded_paths = []  # reset, try per-file strategy
-
-    if downloaded_paths:
-        if progress_callback:
-            for i, p in enumerate(downloaded_paths):
-                progress_callback(i + 1, len(downloaded_paths), Path(p).name)
-        return sorted(downloaded_paths)
-
-    # ── Strategy 2: Per-file with confirmation handling ───────────────────
-    file_list = _list_folder_files(folder_id)
+        # Extract all file IDs from Drive's embedded JSON
+        raw_ids = re.findall(r'"([a-zA-Z0-9_-]{25,40})"', resp.text)
+        seen = set()
+        for fid in raw_ids:
+            if fid not in seen and fid != folder_id:
+                seen.add(fid)
+                file_list.append({"id": fid, "name": f"photo_{len(file_list)}.jpg"})
+            if len(file_list) >= 500:  # Cap at 500 files
+                break
+    except Exception as e:
+        pass
 
     if not file_list:
-        # Last-ditch: try fetching the folder HTML and scraping IDs
-        try:
-            resp = requests.get(
-                f"https://drive.google.com/drive/folders/{folder_id}",
-                timeout=20,
-            )
-            # Drive embeds file IDs in JSON-like data attributes
-            raw_ids = re.findall(r'"([a-zA-Z0-9_-]{25,40})"', resp.text)
-            seen = set()
-            for fid in raw_ids:
-                if fid not in seen and fid != folder_id:
-                    seen.add(fid)
-                    file_list.append({"id": fid, "name": f"image_{len(file_list)}.jpg"})
-                if len(file_list) >= 200:
-                    break
-        except Exception:
-            pass
+        raise RuntimeError(
+            "No images found or folder is not accessible.\n\n"
+            "Common fixes:\n"
+            "• Make sure folder is set to 'Anyone with the link can view'\n"
+            "• Try the 'Upload from Computer' tab (faster & more reliable)\n"
+            f"\nFolder tested: https://drive.google.com/drive/folders/{folder_id}"
+        )
 
-    total = len(file_list)
-    for i, f_info in enumerate(file_list):
-        name = f_info.get("name", f"photo_{i}.jpg")
-        # Ensure has image extension
+    # ── Aggressive Parallel Download (16-20 concurrent workers) ────────────
+    download_lock = threading.Lock()
+    completed_count = [0]
+    
+    def download_task(f_info: dict, index: int) -> tuple[str | None, str]:
+        """Download single file - returns (path, name) or (None, name)."""
+        name = f_info.get("name", f"photo_{index}.jpg")
         if not any(name.lower().endswith(ext) for ext in IMAGE_EXTENSIONS):
             name += ".jpg"
+        
         dest_path = str(dest_dir / name)
-        success = _download_file_with_confirm(f_info["id"], dest_path)
-        if success:
-            downloaded_paths.append(dest_path)
-        if progress_callback:
-            progress_callback(i + 1, total or 1, name)
+        
+        # Try twice quickly, fail fast
+        for attempt in range(2):
+            try:
+                success = _download_file_with_confirm(f_info["id"], dest_path)
+                if success:
+                    with download_lock:
+                        completed_count[0] += 1
+                        if progress_callback:
+                            progress_callback(completed_count[0], len(file_list), name)
+                    return (dest_path, name)
+            except Exception:
+                pass
+        
+        with download_lock:
+            completed_count[0] += 1
+        return (None, name)
+
+    # Use 16-20 workers for ULTRA-AGGRESSIVE parallel downloads
+    max_workers = min(20, len(file_list))  # Up to 20 concurrent downloads
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(download_task, f_info, i): f_info
+            for i, f_info in enumerate(file_list)
+        }
+        
+        for future in as_completed(futures):
+            try:
+                path, name = future.result()
+                if path:
+                    downloaded_paths.append(path)
+            except Exception:
+                pass
 
     if not downloaded_paths:
         raise RuntimeError(
-            "No images could be downloaded from Google Drive.\n\n"
-            "Common fixes:\n"
-            "• Make sure the folder is set to 'Anyone with the link can view'\n"
-            "• Try the 'Upload from Computer' tab (more reliable for demos)\n"
-            "• Avoid folders with >100 files on first attempt (Drive rate-limits)\n"
-            f"\nDirect folder link tested: "
-            f"https://drive.google.com/drive/folders/{folder_id}"
+            "Download failed. Possible reasons:\n"
+            "• Google Drive rate limiting (try again in 1 hour)\n"
+            "• Network connection too slow\n"
+            "• Use 'Upload from Computer' tab instead\n"
+            f"\nFolder: https://drive.google.com/drive/folders/{folder_id}"
         )
 
     return sorted(downloaded_paths)
